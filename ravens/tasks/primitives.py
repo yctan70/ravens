@@ -60,7 +60,7 @@ class PickPlace():
 
     # Activate end effector, move up, and check picking success.
     ee.activate()
-    timeout |= movep(postpick_pose, self.speed)
+        timeout |= movep(postpick_pose, 0.001)
     pick_success = ee.check_grasp()
 
     # Execute placing primitive if pick is successful.
