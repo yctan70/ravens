@@ -68,7 +68,7 @@ class Depalletizing(Task):
                     urdf = self.fill_template(box_template, {'DIM': box_size})
                     box_id = env.add_object(urdf, pose)
                     os.remove(urdf)
-                    object_ids.append((box_id, (0, None)))
+                    object_ids.append((box_id, (1, None)))
                     self.color_random_brown(box_id)
                     object_points[box_id] = self.get_object_points(box_id)
 
@@ -82,20 +82,34 @@ class Depalletizing(Task):
             rpixel = top[int(np.floor(np.random.random() * len(top)))]  # y, x
             box_id = int(object_mask[rpixel[0], rpixel[1]])
             if box_id in boxes:
+                # remove the box to see the next level
                 position, rotation = p.getBasePositionAndOrientation(box_id)
                 rposition = np.float32(position) + np.float32([0, -10, 0])
                 p.resetBasePositionAndOrientation(box_id, rposition, rotation)
                 self.steps.append(box_id)
                 boxes.remove(box_id)
         # self.steps.reverse()  # Time-reversed depalletizing.
+        n = 0
         for box_id in self.steps:
+            # move the box back for the initial condition
             position, rotation = p.getBasePositionAndOrientation(box_id)
             rposition = np.float32(position) + np.float32([0, 10, 0])
             p.resetBasePositionAndOrientation(box_id, rposition, rotation)
-            position = [0.5, -0.25, 0.06]
-            rotation = (0, 0, 0, 1)
+            position = [0.5, -0.25, 0.05]
+            if (np.floor(n/6) % 2) == 0:
+                rotation = utils.eulerXYZ_to_quatXYZW((0, 0, 0))
+            else:
+                rotation = utils.eulerXYZ_to_quatXYZW((0, 0, np.pi/2))
             targets.append((position, rotation))
+            n += 1
 
+        box_size[2], position[2] = 0.01, 0.01
+        pose = (position, rotation)
+        urdf = self.fill_template(box_template, {'DIM': box_size})
+        box_id = env.add_object(urdf, pose)
+        os.remove(urdf)
+
+        self.color_random_brown(box_id)
         self.goals.append((
             object_ids, np.zeros((len(object_ids), len(object_ids))), targets, True, True,
             'pose', (object_points, [(zone_pose, zone_size)]), 1))
