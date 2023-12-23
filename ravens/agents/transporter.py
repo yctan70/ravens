@@ -30,17 +30,16 @@ import tensorflow as tf
 class TransporterAgent:
     """Agent that uses Transporter Networks."""
 
-    def __init__(self, name, task, root_dir, n_rotations=36):
+    def __init__(self, config, name, task, root_dir, n_rotations=36):
         self.name = name
         self.task = task
         self.total_steps = 0
-        self.crop_size = 64
+        self.pix_size, self.bounds, self.cam_config, self.crop_size = config
         self.n_rotations = n_rotations
-        self.pix_size = 0.003125
-        self.in_shape = (320, 160, 6)
-        self.cam_config = cameras.Hikrobot.CONFIG
+        width = int(np.round((self.bounds[0, 1] - self.bounds[0, 0]) / self.pix_size))
+        height = int(np.round((self.bounds[1, 1] - self.bounds[1, 0]) / self.pix_size))
+        self.in_shape = (height, width, 6)
         self.models_dir = os.path.join(root_dir, 'checkpoints', self.name)
-        self.bounds = np.array([[0.25, 0.75], [-0.5, 0.5], [0, 0.28]])
 
     def get_image(self, obs):
         """Stack color and height images image."""
@@ -245,8 +244,8 @@ class TransporterAgent:
 
 class OriginalTransporterAgent(TransporterAgent):
 
-    def __init__(self, name, task, n_rotations=36):
-        super().__init__(name, task, n_rotations)
+    def __init__(self, config, name, task, n_rotations=36):
+        super().__init__(config, name, task, n_rotations)
 
         self.attention = Attention(
             in_shape=self.in_shape,
