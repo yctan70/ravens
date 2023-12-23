@@ -34,7 +34,7 @@ class DummyAgent:
     self.total_iter = 0
 
     # Share same camera configuration as Transporter.
-    self.camera_config = cameras.RealSenseD415.CONFIG
+    self.camera_config = cameras.Hikrobot.CONFIG
 
     # [Optional] Heightmap parameters.
     self.pixel_size = 0.003125

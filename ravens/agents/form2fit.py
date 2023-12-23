@@ -37,7 +37,7 @@ class Form2FitAgent:
     self.descriptor_dim = 16
     self.pixel_size = 0.003125
     self.input_shape = (320, 160, 6)
-    self.camera_config = cameras.RealSenseD415.CONFIG
+    self.camera_config = cameras.Hikrobot.CONFIG
     self.models_dir = os.path.join('checkpoints', self.name)
     self.bounds = np.array([[0.25, 0.75], [-0.5, 0.5], [0, 0.28]])
 

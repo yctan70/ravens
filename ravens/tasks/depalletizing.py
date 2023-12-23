@@ -30,6 +30,32 @@ class Depalletizing(Task):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.max_steps = 30
+        self.pattern = 0
+
+    def alter(self, box_size, object_ids, object_points, env, zone_pose, stack_size):
+        box_template = 'box/box-template.urdf'
+        stack_dim = np.int32([3, 2, 2])
+        offset = ((0, 0), (0, 0.5*box_size[2]))
+        margin = 0.01
+
+        for z in range(stack_dim[2]):
+            # Transpose every layer.
+            box_size[0], box_size[1] = box_size[1], box_size[0]
+            for y in range(stack_dim[1]):
+                for x in range(stack_dim[0]):
+                    position = list((x + 0.5, y + 0.5, z + 0.5) * box_size)
+                    position[0] += x * margin - stack_size[0] / 2 + offset[z][0]
+                    position[1] += y * margin - stack_size[1] / 2 + offset[z][1]
+                    position[2] += z * margin + 0.03
+                    pose = (position, (0, 0, 0, 1))
+                    pose = utils.multiply(zone_pose, pose)
+                    urdf = self.fill_template(box_template, {'DIM': box_size})
+                    box_id = env.add_object(urdf, pose)
+                    os.remove(urdf)
+                    object_ids.append((box_id, (1, None)))
+                    self.color_random_brown(box_id)
+                    object_points[box_id] = self.get_object_points(box_id)
+            stack_dim[0], stack_dim[1] = stack_dim[1], stack_dim[0]-1
 
     def reset(self, env):
         super().reset(env)
@@ -51,26 +77,28 @@ class Depalletizing(Task):
         stack_dim = np.int32([2, 3, 3])
         # stack_dim = np.random.randint(low=2, high=4, size=3)
         box_size = (stack_size - (stack_dim - 1) * margin) / stack_dim
-        for z in range(stack_dim[2]):
 
-            # Transpose every layer.
-            stack_dim[0], stack_dim[1] = stack_dim[1], stack_dim[0]
-            box_size[0], box_size[1] = box_size[1], box_size[0]
-
-            for y in range(stack_dim[1]):
-                for x in range(stack_dim[0]):
-                    position = list((x + 0.5, y + 0.5, z + 0.5) * box_size)
-                    position[0] += x * margin - stack_size[0] / 2
-                    position[1] += y * margin - stack_size[1] / 2
-                    position[2] += z * margin + 0.03
-                    pose = (position, (0, 0, 0, 1))
-                    pose = utils.multiply(zone_pose, pose)
-                    urdf = self.fill_template(box_template, {'DIM': box_size})
-                    box_id = env.add_object(urdf, pose)
-                    os.remove(urdf)
-                    object_ids.append((box_id, (1, None)))
-                    self.color_random_brown(box_id)
-                    object_points[box_id] = self.get_object_points(box_id)
+        if self.pattern == 1:
+            self.alter(box_size, object_ids, object_points, env, zone_pose, stack_size)
+        else:
+            for z in range(stack_dim[2]):
+                # Transpose every layer.
+                stack_dim[0], stack_dim[1] = stack_dim[1], stack_dim[0]
+                box_size[0], box_size[1] = box_size[1], box_size[0]
+                for y in range(stack_dim[1]):
+                    for x in range(stack_dim[0]):
+                        position = list((x + 0.5, y + 0.5, z + 0.5) * box_size)
+                        position[0] += x * margin - stack_size[0] / 2
+                        position[1] += y * margin - stack_size[1] / 2
+                        position[2] += z * margin + 0.03
+                        pose = (position, (0, 0, 0, 1))
+                        pose = utils.multiply(zone_pose, pose)
+                        urdf = self.fill_template(box_template, {'DIM': box_size})
+                        box_id = env.add_object(urdf, pose)
+                        os.remove(urdf)
+                        object_ids.append((box_id, (1, None)))
+                        self.color_random_brown(box_id)
+                        object_points[box_id] = self.get_object_points(box_id)
 
         # Randomly select top box on pallet and save ground truth pose.
         targets = []
@@ -96,10 +124,10 @@ class Depalletizing(Task):
             rposition = np.float32(position) + np.float32([0, 10, 0])
             p.resetBasePositionAndOrientation(box_id, rposition, rotation)
             position = [0.5, -0.25, 0.05]
-            if (np.floor(n/6) % 2) == 0:
+            if (np.floor(n / 6) % 2) == 0:
                 rotation = utils.eulerXYZ_to_quatXYZW((0, 0, 0))
             else:
-                rotation = utils.eulerXYZ_to_quatXYZW((0, 0, np.pi/2))
+                rotation = utils.eulerXYZ_to_quatXYZW((0, 0, np.pi / 2))
             targets.append((position, rotation))
             n += 1
 
@@ -110,8 +138,13 @@ class Depalletizing(Task):
         os.remove(urdf)
 
         self.color_random_brown(box_id)
+        if self.mode == 'test2':
+            matches = np.eye(len(object_ids))
+            self.steps = []
+        else:
+            matches = np.zeros((len(object_ids), len(object_ids)))
         self.goals.append((
-            object_ids, np.zeros((len(object_ids), len(object_ids))), targets, True, True,
+            object_ids, matches, targets, True, True,
             'pose', (object_points, [(zone_pose, zone_size)]), 1))
 
         self.spawn_box()
@@ -128,21 +161,26 @@ class Depalletizing(Task):
     def spawn_box(self):
         """Palletizing: select the box to pick."""
         if self.goals:
-            objs = self.goals[0][0]
-            matches = self.goals[0][1]
+            objs, matches, targs = self.goals[0][0], self.goals[0][1], self.goals[0][2]
             for i in range(len(objs)):
                 object_id, (symmetry, _) = objs[i]
                 targets_i = np.argwhere(matches[i, :]).reshape(-1)
                 for j in targets_i:
-                    box_id = objs[j][0]
-                    position, rotation = p.getBasePositionAndOrientation(box_id)
-                    rposition = np.float32(position) + np.float32([0, -10, 1]) + np.random.rand() * np.float32([1, 1, 0])
-                    p.resetBasePositionAndOrientation(box_id, rposition, (0, 0, 0, 1))
+                    target_pose = targs[j]
+                    pose = p.getBasePositionAndOrientation(object_id)
+                    if self.is_match(pose, target_pose, symmetry):
+                        # remove the box from the target position
+                        box_id = objs[j][0]
+                        position, rotation = p.getBasePositionAndOrientation(box_id)
+                        rposition = np.float32(position) + np.float32([0, -10, 1]) + np.random.rand() * np.float32(
+                            [1, 1, 0])
+                        p.resetBasePositionAndOrientation(box_id, rposition, (0, 0, 0, 1))
+                        matches[i, :] = 0
             if len(self.steps) > 0:
                 obj = self.steps[0]
                 for i in range(len(objs)):
                     object_id, (symmetry, _) = objs[i]
-                    matches[i, :] = np.zeros((1, len(objs)))
+                    # matches[i, :] = np.zeros((1, len(objs)))
                     if object_id == obj:
                         matches[i, i] = 1
                 self.steps.pop(0)

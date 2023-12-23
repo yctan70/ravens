@@ -20,63 +20,115 @@ import pybullet as p
 
 
 class RealSenseD415():
-  """Default configuration with 3 RealSense RGB-D cameras."""
+    """Default configuration with 3 RealSense RGB-D cameras."""
 
-  # Mimic RealSense D415 RGB-D camera parameters.
-  image_size = (480, 640)
-  intrinsics = (450., 0, 320., 0, 450., 240., 0, 0, 1)
+    # Mimic RealSense D415 RGB-D camera parameters.
+    image_size = (480, 640)
+    intrinsics = (450., 0, 320., 0, 450., 240., 0, 0, 1)
 
-  # Set default camera poses.
-  front_position = (1., 0, 0.75)
-  front_rotation = (np.pi / 4, np.pi, -np.pi / 2)
-  front_rotation = p.getQuaternionFromEuler(front_rotation)
-  left_position = (0, 0.5, 0.75)
-  left_rotation = (np.pi / 4.5, np.pi, np.pi / 4)
-  left_rotation = p.getQuaternionFromEuler(left_rotation)
-  right_position = (0, -0.5, 0.75)
-  right_rotation = (np.pi / 4.5, np.pi, 3 * np.pi / 4)
-  right_rotation = p.getQuaternionFromEuler(right_rotation)
+    # Set default camera poses.
+    front_position = (1., 0, 0.75)
+    front_rotation = (np.pi / 4, np.pi, -np.pi / 2)
+    front_rotation = p.getQuaternionFromEuler(front_rotation)
+    left_position = (0, 0.5, 0.75)
+    left_rotation = (np.pi / 4.5, np.pi, np.pi / 4)
+    left_rotation = p.getQuaternionFromEuler(left_rotation)
+    right_position = (0, -0.5, 0.75)
+    right_rotation = (np.pi / 4.5, np.pi, 3 * np.pi / 4)
+    right_rotation = p.getQuaternionFromEuler(right_rotation)
 
-  # Default camera configs.
-  CONFIG = [{
-      'image_size': image_size,
-      'intrinsics': intrinsics,
-      'position': front_position,
-      'rotation': front_rotation,
-      'zrange': (0.01, 10.),
-      'noise': False
-  }, {
-      'image_size': image_size,
-      'intrinsics': intrinsics,
-      'position': left_position,
-      'rotation': left_rotation,
-      'zrange': (0.01, 10.),
-      'noise': False
-  }, {
-      'image_size': image_size,
-      'intrinsics': intrinsics,
-      'position': right_position,
-      'rotation': right_rotation,
-      'zrange': (0.01, 10.),
-      'noise': False
-  }]
+    # Default camera configs.
+    CONFIG = [{
+        'image_size': image_size,
+        'intrinsics': intrinsics,
+        'position': front_position,
+        'rotation': front_rotation,
+        'zrange': (0.01, 10.),
+        'noise': False
+    }, {
+        'image_size': image_size,
+        'intrinsics': intrinsics,
+        'position': left_position,
+        'rotation': left_rotation,
+        'zrange': (0.01, 10.),
+        'noise': False
+    }, {
+        'image_size': image_size,
+        'intrinsics': intrinsics,
+        'position': right_position,
+        'rotation': right_rotation,
+        'zrange': (0.01, 10.),
+        'noise': False
+    }]
 
 
 class Oracle():
-  """Top-down noiseless image used only by the oracle demonstrator."""
+    """Top-down noiseless image used only by the oracle demonstrator."""
 
-  # Near-orthographic projection.
-  image_size = (480, 640)
-  intrinsics = (63e4, 0, 320., 0, 63e4, 240., 0, 0, 1)
-  position = (0.5, 0, 1000.)
-  rotation = p.getQuaternionFromEuler((0, np.pi, -np.pi / 2))
+    # Near-orthographic projection.
+    image_size = (480, 640)
+    intrinsics = (63e4, 0, 320., 0, 63e4, 240., 0, 0, 1)
+    position = (0.5, 0, 1000.)
+    rotation = p.getQuaternionFromEuler((0, np.pi, -np.pi / 2))
 
-  # Camera config.
-  CONFIG = [{
-      'image_size': image_size,
-      'intrinsics': intrinsics,
-      'position': position,
-      'rotation': rotation,
-      'zrange': (999.7, 1001.),
-      'noise': False
-  }]
+    # Camera config.
+    CONFIG = [{
+        'image_size': image_size,
+        'intrinsics': intrinsics,
+        'position': position,
+        'rotation': rotation,
+        'zrange': (999.7, 1001.),
+        'noise': False
+    }]
+
+
+class Hikrobot2:
+    """Default configuration with 3 RealSense RGB-D cameras."""
+
+    # Mimic RealSense D415 RGB-D camera parameters.
+    scale = 2
+    image_size = (2048 / scale, 3072 / scale)
+    intrinsics = (2411.269 / scale, 0, 1551.759 / scale, 0, 2412.0010 / scale, 1058.810 / scale, 0, 0, 1)
+    k1 = -0.1077
+    k2 = 0.1467
+
+    # Set default camera poses.
+    front_position = np.asarray((-901.0547, 203.2767, 804.7774)) * 0.001
+    front_rotation = (-3.1081, 0.0395, -0.0485)
+    front_rotation = p.getQuaternionFromEuler(front_rotation)
+
+    # Default camera configs.
+    CONFIG = [{
+        'image_size': image_size,
+        'intrinsics': intrinsics,
+        'position': front_position,
+        'rotation': front_rotation,
+        'zrange': (1.20, 3.0),
+        'noise': False
+    }]
+
+
+class Hikrobot:
+    """Default configuration with 3 RealSense RGB-D cameras."""
+
+    # Mimic RealSense D415 RGB-D camera parameters.
+    scale = 4
+    image_size = (2048 / scale, 3072 / scale)
+    intrinsics = (2411.269 / scale, 0, 1551.759 / scale, 0, 2412.0010 / scale, 1058.810 / scale, 0, 0, 1)
+    k1 = -0.1077
+    k2 = 0.1467
+
+    # Set default camera poses.
+    front_position = np.asarray((-901.0547, 203.2767, 804.7774)) * 0.001
+    front_rotation = (-3.1081, 0.0395, -0.0485)
+    front_rotation = p.getQuaternionFromEuler(front_rotation)
+
+    # Default camera configs.
+    CONFIG = [{
+        'image_size': image_size,
+        'intrinsics': intrinsics,
+        'position': front_position,
+        'rotation': front_rotation,
+        'zrange': (1.20, 3.0),
+        'noise': False
+    }]

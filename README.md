@@ -84,16 +84,16 @@ python ravens/demos.py --assets_root=./ravens/environments/assets/ --disp=True -
 
 To run with shared memory, open a separate terminal window and run `python3 -m pybullet_utils.runServer`. Then add `--shared_memory` flag to the command above.
 
-**Step 2.** Train a model e.g., Transporter Networks model. Model checkpoints are saved to the `checkpoints` directory. Optional: you may exit training prematurely after 1000 iterations to skip to the next step.
+**Step 2.** Train a model e.g., Transporter Networks model. Model checkpoints are saved to the `checkpoints` directory. Optional: you may exit training prematurely after 1000 iterations to skip to the next step. Here the total iterations are 10000.
 
 ```shell
-python ravens/train.py --task=depalletizing --agent=transporter --n_demos=10
+nohup python ravens/train.py --task=depalletizing --agent=transporter --n_demos=10 --n_steps=10000 &
 ```
 
-**Step 3.** Evaluate a Transporter Networks agent using the model trained for 1000 iterations. Results are saved locally into `.pkl` files.
+**Step 3.** Evaluate a Transporter Networks agent using the model trained for 10000 iterations. Results are saved locally into `.pkl` files.
 
 ```shell
-python ravens/test.py --assets_root=./ravens/environments/assets/ --disp=True --task=depalletizing --agent=transporter --n_demos=10 --n_steps=1000
+python ravens/test.py --assets_root=./ravens/environments/assets/ --disp=True --task=depalletizing --agent=transporter --n_demos=10 --n_steps=10000
 ```
 
 **Step 4.** Plot and print results.

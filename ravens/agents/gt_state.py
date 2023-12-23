@@ -47,7 +47,7 @@ class GtStateAgent:
       self.use_colors = False
 
     self.total_iter = 0
-    self.camera_config = cameras.RealSenseD415.CONFIG
+    self.camera_config = cameras.Hikrobot.CONFIG
 
     # A place to save pre-trained models.
     self.models_dir = os.path.join('checkpoints', self.name)

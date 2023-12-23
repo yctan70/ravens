@@ -65,7 +65,8 @@ def main(unused_argv):
         shared_memory=FLAGS.shared_memory,
         hz=480)
     task = tasks.names[FLAGS.task]()
-    task.mode = 'test'
+    task.mode = 'test2'
+    task.pattern = 1
 
     # Load test dataset.
     ds = dataset.Dataset(os.path.join(FLAGS.data_dir, f'{FLAGS.task}-test'))

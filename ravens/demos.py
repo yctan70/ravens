@@ -50,6 +50,7 @@ def main(unused_argv):
         hz=480)
     task = tasks.names[FLAGS.task](continuous=FLAGS.continuous)
     task.mode = FLAGS.mode
+    # task.pattern = 1
 
     # Initialize scripted oracle agent and dataset.
     agent = task.oracle(env, steps_per_seg=FLAGS.steps_per_seg)
