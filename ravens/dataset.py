@@ -27,6 +27,7 @@ import tensorflow as tf
 PIXEL_SIZE = 0.003125
 CAMERA_CONFIG = cameras.RealSenseD415.CONFIG
 BOUNDS = np.array([[0.25, 0.75], [-0.5, 0.5], [0, 0.28]])
+CROP_SIZE = 64
 
 # Names as strings, REVERSE-sorted so longer (more specific) names are first.
 TASK_NAMES = (tasks.names).keys()
